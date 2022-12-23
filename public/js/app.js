@@ -99,7 +99,10 @@ function streamPublisherAudioToSocket() {
         outputChannelCount: [1]
       })
 
+      const convolver = audioContext.createConvolver();
+      convolver.normalize = true;
       const source = audioContext.createMediaStreamSource(mediaStream);
+      source.connect(convolver);
       source.connect(sttProcessor)
 
       console.log(`sampleRate: ${audioContext.sampleRate}`);
@@ -109,13 +112,11 @@ function streamPublisherAudioToSocket() {
         sampleRate: audioContext.sampleRate,
       });
       sttProcessor.port.onmessage = event => {
-        console.log(`sttProcessor: ${event.type}`)
-        return socket.emit('audio-data', event.data);
+        socket.emit('audio-data', event.data);
       }
       sttProcessor.port.start()
 
       socket.on('end', (_) => {
-        console.log('socket end');
         let lastSubtitleEl = document.querySelector('.ownSubtitle.last')
         lastSubtitleEl.classList.remove('last');
 

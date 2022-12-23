@@ -1,11 +1,12 @@
 const speech = require('@google-cloud/speech');
+const fs = require('fs');
 const {STT_DEFAULT_ENCODING, STT_DEFAULT_SAMPLE_RATE, STT_DEFAULT_MODEL_CONFIG, STT_INTERIM_RESULTS} = require('../../stt-config')
 const speechClient = new speech.SpeechClient();
 
 const connectionHandler = (socket) => {
-  console.log(`new socket connection from ${socket.handshake.address}`);
 
   let recognizeStream;
+  const writeStream = fs.createWriteStream('./recording.wav');
 
   socket.on('setup', (config) => {
 
@@ -51,6 +52,9 @@ const connectionHandler = (socket) => {
     socket.on('audio-data', (buffer) => {
       if (recognizeStream) {
         recognizeStream.write(buffer);
+      }
+      if (writeStream) {
+        writeStream.write(buffer);
       }
     });
   });

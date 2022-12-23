@@ -20,7 +20,10 @@ async function main() {
 // app.use(express.static('public'));
 app.use('/', mainRouter);
 
-io.on('connected', connectionHandler);
+io.on('connected', (socket) => {
+  console.log('new connection!');
+  connectionHandler(socket);
+});
 
 process.on('SIGINT', shutdown);
 

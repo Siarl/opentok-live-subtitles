@@ -1,7 +1,7 @@
 const express = require('express');
 
 const staticMiddleware = express.static(__dirname + '/../../public', {extensions: ['html']});
-const envUsername = process.env.USERNAME ?? 'user';
+const envUsername = process.env.UNAME ?? 'user';
 const envPassword = process.env.PASSWORD ?? 'password';
 
 module.exports = (req, res, next) => {

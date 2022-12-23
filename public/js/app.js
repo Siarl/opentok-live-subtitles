@@ -175,7 +175,7 @@ toggle.addEventListener('change', function () {
   toggleSubtitles(this.checked);
 }, false);
 
-fetch(`${window.location.protocol}//${window.location.host}/call`, {
+fetch(`${window.location.protocol}//${window.location.host}/calls`, {
   method: 'GET',
   headers: {
     'Content-Type': 'application/json',
@@ -191,7 +191,7 @@ fetch(`${window.location.protocol}//${window.location.host}/call`, {
   initializeSession();
 }).catch(function catchErr(error) {
   handleError(error);
-  alert('Failed to get opentok sessionId and token. Make sure you have updated the ot-config.js file.');
+  alert('Failed to get opentok sessionId and token.');
 });
 
 

@@ -3,6 +3,7 @@ const {STT_DEFAULT_ENCODING, STT_DEFAULT_SAMPLE_RATE, STT_DEFAULT_MODEL_CONFIG, 
 const speechClient = new speech.SpeechClient();
 
 const connectionHandler = (socket) => {
+  console.log(`new socket connection from ${socket.handshake.address}`);
 
   let recognizeStream;
 
@@ -29,6 +30,7 @@ const connectionHandler = (socket) => {
         if (data.results[0] && data.results[0].alternatives[0]) {
           let transcript = data.results[0].alternatives[0].transcript;
           let isFinal = data.results[0].isFinal;
+          console.log(transcript);
           socket.emit('transcript', {isFinal, transcript})
         }
       })

@@ -215,4 +215,4 @@ dist
 .pnp.*
 
 ### Custom
-.env
+.google-key

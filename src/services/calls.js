@@ -9,7 +9,7 @@ const createSession = () => new Promise((resolve, reject) => {
   opentok.createSession((error, session) => {
     if (error) reject(error);
 
-    globalSession = session.session;
+    globalSession = session.sessionId;
 
     resolve(globalSession)
   });

@@ -1,6 +1,5 @@
-const io = require('socket.io');
 const speech = require('@google-cloud/speech');
-const {STT_DEFAULT_ENCODING, STT_DEFAULT_SAMPLE_RATE, STT_DEFAULT_MODEL_CONFIG, STT_INTERIM_RESULTS} = require('./stt-config')
+const {STT_DEFAULT_ENCODING, STT_DEFAULT_SAMPLE_RATE, STT_DEFAULT_MODEL_CONFIG, STT_INTERIM_RESULTS} = require('../../stt-config')
 const speechClient = new speech.SpeechClient();
 
 const connectionHandler = (socket) => {

@@ -108,10 +108,14 @@ function streamPublisherAudioToSocket() {
       socket.emit('setup', {
         sampleRate: audioContext.sampleRate,
       });
-      sttProcessor.port.onmessage = event => socket.emit('audio-data', event.data)
+      sttProcessor.port.onmessage = event => {
+        console.log(`sttProcessor: ${event.type}`)
+        return socket.emit('audio-data', event.data);
+      }
       sttProcessor.port.start()
 
       socket.on('end', (_) => {
+        console.log('socket end');
         let lastSubtitleEl = document.querySelector('.ownSubtitle.last')
         lastSubtitleEl.classList.remove('last');
 

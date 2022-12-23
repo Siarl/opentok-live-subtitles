@@ -5,10 +5,11 @@ const { Server } = require('socket.io');
 const { SpeechClient } = require('@google-cloud/speech');
 const io = new Server(server);
 const port = process.env.PORT ?? 3000;
-const loadGoogleJWT = require('./src/helpers/googleAuth');
+const { createJwt, deleteJwt } = require('./src/helpers/googleAuth');
+const mainRouter = require('./src/routes');
 
 async function main() {
-  loadGoogleJWT(__dirname);
+  createJwt(__dirname);
 
   server.listen(port, () => {
     console.log(`Server is listening on port: ${port}`);
@@ -42,6 +43,17 @@ async function main() {
 
 }
 
-app.use(express.static('public'));
+// app.use(express.static('public'));
+app.use('/', mainRouter);
+
+process.on('SIGINT', shutdown);
+
+function shutdown() {
+  console.log('shutting down server...');
+  deleteJwt(__dirname);
+  server.close(function () {
+    console.log('server closed');
+  });
+}
 
 main().catch(console.error);

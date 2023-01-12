@@ -7,7 +7,8 @@ let session;
 let publisher;
 let socket;
 let audioContext;
-let sttProcessor;
+let lin16Processor;
+let agcProcessor;
 
 function handleError(error) {
   if (error) {
@@ -20,7 +21,7 @@ function initializeSession() {
 
   // Subscribe to a newly created stream
   session.on('streamCreated', function streamCreated(event) {
-    var subscriberOptions = {
+    const subscriberOptions = {
       insertMode: 'append',
       width: '100%',
       height: '100%'
@@ -76,8 +77,9 @@ function toggleSubtitles(turnOn) {
   } else if (socket) {
     socket.close();
     audioContext.close();
-    sttProcessor.port.close();
-    sttProcessor = null;
+    lin16Processor.port.close();
+    lin16Processor = null;
+    agcProcessor = null;
     socket = null;
     audioContext = null;
   }
@@ -90,80 +92,89 @@ function toggleSubtitles(turnOn) {
 function streamPublisherAudioToSocket() {
   return new Promise(function (resolve, reject) {
     const audioTrack = publisher.getAudioSource();
-    const mediaStream = new MediaStream([audioTrack]);
-
     audioContext = new window.AudioContext();
 
-    audioContext.audioWorklet.addModule('js/stt-processor.js').then((res) => {
-      sttProcessor = new AudioWorkletNode(audioContext, 'stt-processor', {
-        outputChannelCount: [1]
-      })
+    console.log(audioTrack.getConstraints());
+    audioTrack.applyConstraints({
+      autoGainControl: true
+    }).then(() => {
+      const mediaStream = new MediaStream([audioTrack]);
 
-      const convolver = audioContext.createConvolver();
-      convolver.normalize = true;
-      const source = audioContext.createMediaStreamSource(mediaStream);
-      source.connect(convolver);
-      source.connect(sttProcessor)
+      Promise.all([
+        audioContext.audioWorklet.addModule('js/agc-processor.js'),
+        audioContext.audioWorklet.addModule('js/lin16-processor.js'),
+      ]).then(() => {
+        agcProcessor = new AudioWorkletNode(audioContext, 'agc-processor', {
+          outputChannelCount: [1]
+        });
 
-      console.log(`sampleRate: ${audioContext.sampleRate}`);
+        lin16Processor = new AudioWorkletNode(audioContext, 'lin16-processor', {
+          outputChannelCount: [1]
+        });
 
-      socket = io();
-      socket.emit('setup', {
-        sampleRate: audioContext.sampleRate,
-      });
-      sttProcessor.port.onmessage = event => {
-        socket.emit('audio-data', event.data);
-      }
-      sttProcessor.port.start()
+        const source = audioContext.createMediaStreamSource(mediaStream);
+        source.connect(agcProcessor)
+        agcProcessor.connect(lin16Processor)
 
-      socket.on('end', (_) => {
-        let lastSubtitleEl = document.querySelector('.ownSubtitle.last')
-        lastSubtitleEl.classList.remove('last');
+        socket = io();
+        socket.emit('setup', {
+          sampleRate: audioContext.sampleRate,
+        });
 
-        const message = document.createElement('p');
-        message.innerHTML = 'Subtitles ended. Enable again to continue.'
-        message.classList.add('subtitleEnded');
-        subContainer.appendChild(message);
-
-        subContainer.scrollTop = subContainer.scrollHeight;
-
-        const nextSubtitleEl = document.createElement('p');
-        nextSubtitleEl.classList.add('ownSubtitle', 'last');
-        subContainer.appendChild(nextSubtitleEl);
-      })
-
-      socket.on('transcript', ({isFinal, transcript}) => {
-        console.log(`tr: ${isFinal} ${transcript}`);
-
-        let lastSubtitleEl = document.querySelector('.ownSubtitle.last')
-        lastSubtitleEl.innerHTML = transcript;
-        subContainer.scrollTop = subContainer.scrollHeight;
-
-        if (isFinal) {
-          lastSubtitleEl.classList.remove('last');
-          const node = document.createElement('p');
-          node.classList.add('ownSubtitle', 'last');
-          subContainer.appendChild(node)
+        lin16Processor.port.onmessage = event => {
+          socket.emit('audio-data', event.data);
         }
+        lin16Processor.port.start()
 
-        session.signal({
-          type: 'subtitle',
-          data: JSON.stringify({isFinal, transcript})
+        socket.on('end', (_) => {
+          let lastSubtitleEl = document.querySelector('.ownSubtitle.last')
+          lastSubtitleEl.classList.remove('last');
+
+          const message = document.createElement('p');
+          message.innerHTML = 'Subtitles ended. Enable again to continue.'
+          message.classList.add('subtitleEnded');
+          subContainer.appendChild(message);
+
+          subContainer.scrollTop = subContainer.scrollHeight;
+
+          const nextSubtitleEl = document.createElement('p');
+          nextSubtitleEl.classList.add('ownSubtitle', 'last');
+          subContainer.appendChild(nextSubtitleEl);
         })
-      })
 
-      resolve(true);
-    }, (error) => {
-      console.log('could not connect', error)
-      resolve(false)
+        socket.on('transcript', ({isFinal, transcript}) => {
+          console.log(`tr: ${isFinal} ${transcript}`);
+
+          let lastSubtitleEl = document.querySelector('.ownSubtitle.last')
+          lastSubtitleEl.innerHTML = transcript;
+          subContainer.scrollTop = subContainer.scrollHeight;
+
+          if (isFinal) {
+            lastSubtitleEl.classList.remove('last');
+            const node = document.createElement('p');
+            node.classList.add('ownSubtitle', 'last');
+            subContainer.appendChild(node)
+          }
+
+          session.signal({
+            type: 'subtitle',
+            data: JSON.stringify({isFinal, transcript})
+          })
+        })
+
+        resolve(true);
+      }, (error) => {
+        console.log('could not connect', error)
+        resolve(false)
+      });
     });
+
   });
 }
 
 /*
 init
  */
-
 
 let subContainer = document.getElementById('subtitles');
 const otherSubtitle = document.createElement('p');

@@ -24,4 +24,4 @@ class Lin16Processor extends AudioWorkletProcessor {
   }
 }
 
-registerProcessor('stt-processor', Lin16Processor)
+registerProcessor('lin16-processor', Lin16Processor)

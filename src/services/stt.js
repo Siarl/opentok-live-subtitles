@@ -2,16 +2,7 @@ const speech = require('@google-cloud/speech');
 const {Writable} = require('stream');
 const speechClient = new speech.SpeechClient();
 const {STT_DEFAULT_ENCODING, STT_DEFAULT_SAMPLE_RATE, STT_DEFAULT_MODEL_CONFIG, STT_INTERIM_RESULTS} = require('../../stt-config')
-const streamingLimit = 30000; // in ms
-
-const foospeechCallback = (callback) => data => {
-  if (data.results[0] && data.results[0].alternatives[0]) {
-    let transcript = data.results[0].alternatives[0].transcript;
-    let isFinal = data.results[0].isFinal;
-    console.log(transcript);
-    callback(isFinal, transcript);
-  }
-};
+const streamingLimit = process.env.STT_TIME_LIMIT; // in ms
 
 module.exports = (config, callback) => {
 

@@ -2,7 +2,8 @@
 
 let apiKey;
 let sessionId;
-let token;
+let otToken;
+let sttToken;
 let session;
 let publisher;
 let socket;
@@ -60,7 +61,7 @@ function initializeSession() {
   publisher = OT.initPublisher('publisher', publisherOptions, handleError);
 
   // Connect to the session
-  session.connect(token, function callback(error) {
+  session.connect(otToken, function callback(error) {
     if (error) {
       handleError(error);
     } else {
@@ -113,11 +114,14 @@ function streamPublisherAudioToSocket() {
         });
 
         const source = audioContext.createMediaStreamSource(mediaStream);
-        source.connect(agcProcessor)
-        agcProcessor.connect(lin16Processor)
+        // source.connect(agcProcessor)
+        // agcProcessor.connect(lin16Processor)
+        source.connect(lin16Processor);
 
         socket = io();
         socket.emit('setup', {
+          session: otToken,
+          auth: sttToken,
           sampleRate: audioContext.sampleRate,
         });
 
@@ -202,7 +206,8 @@ fetch(`${window.location.protocol}//${window.location.host}/calls`, {
 }).then(function fetchJson(json) {
   apiKey = json.apiKey;
   sessionId = json.sessionId;
-  token = json.token;
+  otToken = json.token;
+  sttToken = json.sttToken;
 
   initializeSession();
 }).catch(function catchErr(error) {

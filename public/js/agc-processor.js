@@ -6,10 +6,10 @@ class AGCProcessor extends AudioWorkletProcessor {
   constructor(options) {
     super(options);
 
-    this.threshold = -20; // dBFS
+    this.threshold = -10; // dBFS
     this.attackTime = 0.08; // seconds
     this.releaseTime = 0.5; // seconds
-    this.smoothingTimeConstant = 0.1; // seconds
+    this.smoothingTimeConstant = 0.4; // seconds
     this.targetLevel = -5; // dBFS
 
     this.inputGain = 1;

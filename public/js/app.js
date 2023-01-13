@@ -102,12 +102,12 @@ function streamPublisherAudioToSocket() {
       const mediaStream = new MediaStream([audioTrack]);
 
       Promise.all([
-        audioContext.audioWorklet.addModule('js/agc-processor.js'),
+        // audioContext.audioWorklet.addModule('js/agc-processor.js'),
         audioContext.audioWorklet.addModule('js/lin16-processor.js'),
       ]).then(() => {
-        agcProcessor = new AudioWorkletNode(audioContext, 'agc-processor', {
-          outputChannelCount: [1]
-        });
+        // agcProcessor = new AudioWorkletNode(audioContext, 'agc-processor', {
+        //   outputChannelCount: [1]
+        // });
 
         lin16Processor = new AudioWorkletNode(audioContext, 'lin16-processor', {
           outputChannelCount: [1]

@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const callsController = require('../controllers/calls');
+const authController = require('../controllers/auth');
 
-router.get('/', callsController.getSession)
+router.post('/:id', authController.create);
+router.delete('/:id', authController.delete);
 
 module.exports = router;

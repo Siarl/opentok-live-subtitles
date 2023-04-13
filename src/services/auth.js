@@ -7,17 +7,18 @@ const otTokenAuthMap = new Map();
 const createAuthToken = (secret, otToken) => new Promise((resolve, reject) => {
 
   if (!SECRETS.includes(secret)) {
-    reject('Invalid secret.');
+    reject({code: 401, message: 'Unauthorized'});
+  }
+
+
+  if (otTokenAuthMap.has(otToken)) {
+    reject({code: 409, message: 'Already exists.'});
   }
 
   const token = randString(16);
 
   let expireDate = new Date();
   expireDate.setSeconds(expireDate.getSeconds() + TTL_SECONDS);
-
-  if (otTokenAuthMap.has(otToken)) {
-    reject('Already exists.')
-  }
 
   otTokenAuthMap.set(otToken, {
     expireDate,
@@ -28,10 +29,24 @@ const createAuthToken = (secret, otToken) => new Promise((resolve, reject) => {
 
 });
 
+const deleteAuthToken = (secret, otToken) => new Promise((resolve, reject) => {
+  if (!SECRETS.includes(secret)) {
+    reject({code: 401, message: 'Unauthorized'});
+  }
+
+  if (otTokenAuthMap.has(otToken)) {
+    otTokenAuthMap.delete(otToken);
+  }
+
+  resolve();
+});
+
 const validateAuthToken = (otToken, sttToken) => new Promise((resolve, reject) => {
   if (!otTokenAuthMap.has(otToken)) {
     reject('Does not exist.');
   }
+
+  // todo validate args => not null, not empty
 
   const authEntry = otTokenAuthMap.get(otToken);
 
@@ -48,6 +63,7 @@ const validateAuthToken = (otToken, sttToken) => new Promise((resolve, reject) =
 });
 
 module.exports = {
+  deleteAuthToken,
   createAuthToken,
   validateAuthToken
 }

@@ -1,6 +1,8 @@
 const {createAuthToken, deleteAuthToken} = require("../services/auth");
 
-exports.create = async (req, res) => {
+exports.create = (req, res) => {
+
+  console.log(`create: ${JSON.stringify(req.headers)} ${JSON.stringify(req.body)}`);
   const secret = req.headers.authorization;
   const token = req.body.id;
 

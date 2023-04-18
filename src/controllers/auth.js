@@ -1,8 +1,10 @@
 const {createAuthToken, deleteAuthToken} = require("../services/auth");
 
 exports.create = async (req, res) => {
-  const secret = req.get('authorization');
-  const token = req.get('id');
+  const secret = req.headers.authorization;
+  const token = req.body.id;
+
+  console.log(`create: ${secret} ${token}`);
 
   createAuthToken(secret, token).then((token) => {
     res.status(200).send(token);
@@ -16,8 +18,8 @@ exports.create = async (req, res) => {
 };
 
 exports.delete = (req, res) => {
-  const secret = req.get('authorization');
-  const token = req.get('id');
+  const secret = req.headers.authorization;
+  const token = req.body.id;
 
   deleteAuthToken(secret, token).then(() => {
     res.status(204).send();
